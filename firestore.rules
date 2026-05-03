@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'juhnotbooksantana@gmail.com' && request.auth.token.email_verified == true;
+    }
+
+    function isAuthorized() {
+      return isSignedIn() && (
+        isAdmin() || (
+          exists(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)) &&
+          get(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)).data.status == 'active' &&
+          (!get(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)).data.keys().contains('expiresAt') || 
+           get(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)).data.expiresAt > request.time)
+        )
+      );
+    }
+
+    function canManageFeedbacks() {
+      return isAdmin() || (
+        isAuthorized() && 
+        get(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)).data.role in ['operator', 'analyst']
+      );
+    }
+
+    match /feedbacks/{feedbackId} {
+      allow create: if canManageFeedbacks() 
+                    && isValidFeedback(request.resource.data)
+                    && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthorized() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+
+    match /authorized_users/{email} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && (request.method == 'delete' || isValidAuthorizedUser(request.resource.data));
+    }
+
+    function isValidAuthorizedUser(data) {
+      return data.keys().hasAll(['role', 'status', 'addedAt', 'addedBy'])
+        && data.role in ['operator', 'analyst', 'viewer']
+        && data.status in ['active', 'suspended']
+        && data.addedAt is timestamp
+        && data.addedBy is string
+        && (!data.keys().contains('expiresAt') || data.expiresAt is timestamp);
+    }
+
+    function isValidFeedback(data) {
+      return data.keys().hasAll(['userId', 'history', 'suggestedTerminal', 'outcome', 'timestamp'])
+        && data.userId is string
+        && data.history is list
+        && data.history.size() == 7
+        && data.suggestedTerminal is number
+        && data.outcome in ['win', 'loss']
+        && data.timestamp is timestamp
+        && (!data.keys().contains('justification') || data.justification is string);
+    }
+  }
+}

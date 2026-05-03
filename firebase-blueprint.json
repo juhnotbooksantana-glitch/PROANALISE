@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "bet_feedback": {
+      "title": "Bet Feedback",
+      "description": "Historical analysis data and user-reported outcome for pattern learning.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The user who provided feedback." },
+        "history": { "type": "array", "description": "The 7 numbers used for analysis." },
+        "suggestedTerminal": { "type": "number", "description": "The predicted terminal." },
+        "triggeredStrategy": { "type": "string", "description": "The strategy name that triggered the signal." },
+        "outcome": { "type": "string", "enum": ["win", "loss"], "description": "The result reported by the user." },
+        "justification": { "type": "string", "description": "User notes on why the signal worked or failed." },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "probabilities": { "type": "object", "description": "The probability map at the time of prediction." }
+      },
+      "required": ["userId", "history", "suggestedTerminal", "outcome", "timestamp"]
+    },
+    "authorized_user": {
+      "title": "Authorized User",
+      "description": "Granular access control for external operators.",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["operator", "analyst", "viewer"], "description": "The user's permission level." },
+        "status": { "type": "string", "enum": ["active", "suspended"], "description": "Current account status." },
+        "expiresAt": { "type": "string", "format": "date-time", "description": "Optional expiration date for access." },
+        "addedAt": { "type": "string", "format": "date-time" },
+        "addedBy": { "type": "string" }
+      },
+      "required": ["role", "status", "addedAt", "addedBy"]
+    }
+  },
+  "firestore": {
+    "feedbacks": {
+      "schema": "bet_feedback",
+      "description": "Collection of bet results for algorithm optimization."
+    },
+    "authorized_users": {
+      "schema": "authorized_user",
+      "description": "Whitelist of emails allowed to log in."
+    }
+  }
+}

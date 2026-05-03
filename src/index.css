@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-yellow: #FFDD00;
+  --color-brand-green: #00FF41;
+  --color-brand-red: #FF3131;
+  --color-brand-bg: #050505;
+  --color-brand-card: #0F1012;
+  --color-obsidian: #080808;
+}
+
+@layer base {
+  body {
+    @apply text-gray-400 font-sans antialiased selection:bg-brand-yellow selection:text-black;
+    background: radial-gradient(circle at 50% 0%, #111 0%, #050505 100%);
+    min-height: 100vh;
+  }
+}
+
+@utility technical-border {
+  @apply border border-white/5;
+}
+
+@utility glass-panel {
+  @apply bg-brand-card/80 backdrop-blur-xl border border-white/5 shadow-2xl;
+}
+
+@utility num-glow-red {
+  box-shadow: 0 0 15px rgba(255, 49, 49, 0.4);
+}
+
+@utility num-glow-green {
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+}
+
+@utility num-glow-yellow {
+  box-shadow: 0 0 15px rgba(255, 221, 0, 0.4);
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 221, 0, 0.2);
+  }
+}
